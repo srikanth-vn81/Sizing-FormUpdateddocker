@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sizing Form</title>
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <!-- SheetJS for Excel export/import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root{ --brand:#4d9cff; }
+    *{box-sizing:border-box}
+    body{ font-family: Arial, sans-serif; background:#f8f9fa; margin:20px; color:#333; font-size:14px; }
+
+    .form-header{ display:flex;justify-content:space-between;align-items:center;
+      background:var(--brand);color:#fff;padding:12px 20px;
+      border-radius:8px 8px 0 0;font-weight:600; }
+
+    .nav-container{ display:flex;gap:12px;background:#fff;padding:14px 16px;
+      border-radius:0 0 8px 8px;box-shadow:0 2px 6px rgba(0,0,0,.1) }
+    .nav-pill{ display:flex;align-items:center;gap:6px;
+      padding:6px 12px;border-radius:20px;border:1px solid var(--brand);
+      color:#2572eb;background:#fff;cursor:pointer;font-weight:500;
+      transition:.15s; user-select:none; }
+    .nav-pill:hover{background:#eaf2ff}
+    .nav-pill.active{background:var(--brand);color:#fff}
+
+    .content{ display:none;margin-top:20px;padding:20px;background:#fff;border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    .content.active{display:block}
+
+    .form-section{ background:#fff;margin-bottom:18px;border-radius:10px;
+      box-shadow:0 2px 6px rgba(0,0,0,.08); padding:20px; }
+    .form-section h3{ margin:-20px -20px 16px -20px;padding:12px 16px;
+      border-radius:10px 10px 0 0;color:#fff;font-weight:700;font-size:16px;
+      display:flex;align-items:center;gap:10px;
+      background:linear-gradient(90deg,#3a7bd5,#3a6073); }
+
+    .question{ font-size:16px;font-style:italic;font-weight:700;color:#2c3e50;margin:0 0 10px 0; }
+    .btn{ display:inline-flex;align-items:center;gap:6px;
+      padding:8px 14px;border-radius:20px;border:1px solid #c9ced6;
+      background:#fff;color:#2572eb;cursor:pointer;transition:.15s;margin-right:8px; }
+    .btn:hover{border-color:#9fb4ff;background:#eef5ff}
+
+    .form-group-vertical{display:flex;flex-direction:column;gap:6px;max-width:320px;margin-bottom:14px}
+    input[type="text"],input[type="number"],select,input[type="time"]{
+      padding:8px 10px;border:1px solid #ccd3db;border-radius:8px;font-size:14px
+    }
+    small{color:#6b7280}
+
+    .checkbox-group{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+    .checkbox-item{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e0e6ee;
+      border-radius:8px;background:#fff;cursor:pointer;transition:.15s}
+    .checkbox-item:hover{background:#f5f9ff}
+
+    .save-btn{ background:#28a745;color:#fff;border:none;border-radius:8px;padding:8px 16px;
+      font-weight:600;cursor:pointer;transition:.15s }
+    .save-btn:hover{background:#218838}
+
+    .workload-card{ margin:12px 0;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.08);
+      border:1px solid #e9edf3;background:#fff; }
+    .workload-card-header{ display:flex;align-items:center;gap:10px;justify-content:space-between;
+      padding:10px 14px;color:#fff;font-weight:700; }
+    .workload-body{padding:12px;background:#fff}
+
+    table{width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden}
+    th,td{border:1px solid #e6eaf0;padding:10px;text-align:center}
+    th{background:#ecf2f8;font-weight:700}
+    td:first-child, th:first-child{background:#f6f9fc;text-align:left;padding-left:14px}
+    td input{width:auto;text-align:center;border:1px solid #d7dfe8;border-radius:8px;padding:6px}
+
+    .required-label::after{ content:" *"; color:red; font-weight:bold; }
+    .error-border{ border:2px solid red !important; border-radius:6px; padding:4px; }
+
+    /* Uploaded filename style */
+    .uploaded-file{ display:block; margin-top:4px; font-size:12px; color:green; font-weight:600; }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="form-header">
+    <span>Sizing Form</span>
+    <span id="stepCounter">Step 1 of 5</span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="nav-container">
+    <div class="nav-pill active" onclick="showContent('client', this)"><i class="fa-solid fa-building"></i> Client</div>
+    <div class="nav-pill" onclick="showContent('workload', this)"><i class="fa-solid fa-list"></i> Workload</div>
+    <div class="nav-pill" onclick="showContent('kpi', this)"><i class="fa-solid fa-chart-line"></i> KPI</div>
+    <div class="nav-pill" onclick="showContent('hours', this)"><i class="fa-regular fa-clock"></i> Hours</div>
+    <div class="nav-pill" onclick="showContent('submit', this)"><i class="fa-solid fa-paper-plane"></i> Submit</div>
+  </div>
+
+  <!-- CLIENT TAB -->
+  <div id="client" class="content active">
+    <div class="form-section">
+      <p class="question">Is this a new business or existing business?</p>
+      <button class="btn" onclick="chooseBusiness('new')"><i class="fa-solid fa-plus"></i> New Business</button>
+      <button class="btn" onclick="chooseBusiness('existing')"><i class="fa-solid fa-briefcase"></i> Existing Business</button>
+    </div>
+    <div id="clientDetails" style="display:none">
+      <div id="existingDropdown" class="form-section" style="display:none">
+        <label for="businessList">Select Existing Business:</label><br/>
+        <select id="businessList">
+          <option value="">-- Choose a business --</option>
+          <option>Business One</option>
+          <option>Business Two</option>
+        </select>
+      </div>
+      <div class="form-section" id="clientInfo">
+        <h3><i class="fa-solid fa-building-user"></i> Client Information</h3>
+        <div class="form-group-vertical">
+          <label for="clientName">Client Name</label>
+          <input id="clientName" type="text" placeholder="Enter client name"/>
+        </div>
+      </div>
+      <div class="form-section">
+        <h3><i class="fa-solid fa-layer-group"></i> Lines of Business (LOB)</h3>
+        <div class="form-group-vertical">
+          <label for="lobCount">LOB Count</label>
+          <input id="lobCount" type="number" placeholder="0" min="0"/>
+        </div>
+        <div class="form-group-vertical">
+          <label for="lobNames">LOB Names</label>
+          <input id="lobNames" type="text" placeholder="Enter LOB names separated by commas" oninput="updateLobCount()"/>
+          <small>Example: ABC, XYZ, Support</small>
+        </div>
+        <button class="btn" onclick="generateLOBs()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate LOBs</button>
+        <div id="lobContainer" style="margin-top:14px"></div>
+      </div>
+      <div style="text-align:right;margin-top:6px">
+        <button class="save-btn" onclick="saveClient()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKLOAD TAB -->
+  <div id="workload" class="content">
+    <div class="form-section">
+      <h3><i class="fa-solid fa-chart-bar"></i> Workload Metrics</h3>
+      <div id="workloadCards"><p>No LOBs saved yet.</p></div>
+    </div>
+  </div>
+
+  <!-- KPI TAB -->
+  <div id="kpi" class="content">
+    <div class="form-section">
+      <h3><i class="fa-solid fa-chart-line"></i> KPI</h3>
+      <div id="kpiCards"><p>No LOBs saved yet.</p></div>
+    </div>
+  </div>
+
+  <!-- HOURS TAB -->
+  <div id="hours" class="content">
+    <div class="form-section">
+      <h3><i class="fa-regular fa-clock"></i> Hours</h3>
+      <div id="hoursCards"><p>No LOBs saved yet.</p></div>
+    </div>
+  </div>
+
+  <!-- SUBMIT TAB -->
+  <div id="submit" class="content">
+    <div class="form-section">
+      <h3><i class="fa-solid fa-paper-plane"></i> Submit</h3>
+      <p>Review & submit…</p>
+    </div>
+  </div>
+
+  <script>
+    function showContent(id, el){
+      document.querySelectorAll('.nav-pill').forEach(p=>p.classList.remove('active'));
+      if(el) el.classList.add('active');
+      document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      const stepIndex = ['client','workload','kpi','hours','submit'].indexOf(id)+1;
+      if(stepIndex>0) document.getElementById('stepCounter').textContent = `Step ${stepIndex} of 5`;
+    }
+
+    function chooseBusiness(type){
+      document.getElementById('clientDetails').style.display = 'block';
+      if(type === 'existing'){
+        document.getElementById('existingDropdown').style.display = 'block';
+        document.getElementById('clientInfo').style.display = 'none';
+      } else {
+        document.getElementById('existingDropdown').style.display = 'none';
+        document.getElementById('clientInfo').style.display = 'block';
+      }
+    }
+
+    const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+    const colorPairs = [['#3b82f6','#1e3a8a'],['#10b981','#065f46'],['#f59e0b','#b45309'],
+                        ['#8b5cf6','#4c1d95'],['#ef4444','#7f1d1d'],['#06b6d4','#164e63']];
+
+    function updateLobCount(){
+      document.getElementById('lobCount').value=document.getElementById('lobNames').value.split(',').map(v=>v.trim()).filter(Boolean).length;
+    }
+
+    function generateLOBs(){
+      const names=document.getElementById('lobNames').value.split(',').map(v=>v.trim()).filter(Boolean);
+      document.getElementById('lobCount').value=names.length;
+      const container=document.getElementById('lobContainer');container.innerHTML='';
+      names.forEach(name=>{
+        const card=document.createElement('div');card.className='form-section';
+        card.innerHTML=`<h3><i class="fa-solid fa-briefcase"></i> ${name}</h3>
+          <p class="required-label"><strong>Channels:</strong></p>
+          <div class="checkbox-group channels-group">
+            ${['Inbound','Outbound','Back-Office','Social Media','Chat','Email'].map(ch=>`<label class="checkbox-item"><input type="checkbox" value="${ch}"> ${ch}</label>`).join('')}
+          </div>
+          <p style="margin-top:12px" class="required-label"><strong>Billing Type:</strong></p>
+          <div class="checkbox-group billing-group">
+            ${['Per Call','Per Min','Productive Hour'].map(bt=>`<label class="checkbox-item"><input type="checkbox" value="${bt}"> ${bt}</label>`).join('')}
+          </div>
+          <p style="margin-top:12px" class="required-label"><strong>Targeted GEO:</strong></p>
+          <div class="checkbox-group geo-group">
+            ${['Canada','United States','India','Philippines','Mexico','Colombia','Poland','Hong Kong'].map(geo=>`<label class="checkbox-item"><input type="checkbox" value="${geo}"> ${geo}</label>`).join('')}
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+
+    let savedLobs=[];
+    function saveClient(){
+      savedLobs=[];
+      const sections=document.querySelectorAll('#lobContainer .form-section');
+      let hasError=false;
+
+      sections.forEach(sec=>{
+        const name=sec.querySelector('h3').textContent.trim(),s=slug(name);
+        const channels=[],billing=[],geo=[];
+
+        sec.querySelectorAll('.channels-group input[type="checkbox"]').forEach(cb=>{if(cb.checked) channels.push(cb.value);});
+        sec.querySelectorAll('.billing-group input[type="checkbox"]').forEach(cb=>{if(cb.checked) billing.push(cb.value);});
+        sec.querySelectorAll('.geo-group input[type="checkbox"]').forEach(cb=>{if(cb.checked) geo.push(cb.value);});
+
+        sec.querySelectorAll('.checkbox-group').forEach(g=>g.classList.remove('error-border'));
+
+        if(channels.length===0 || billing.length===0 || geo.length===0){
+          hasError=true;
+          if(channels.length===0) sec.querySelector('.channels-group').classList.add('error-border');
+          if(billing.length===0) sec.querySelector('.billing-group').classList.add('error-border');
+          if(geo.length===0) sec.querySelector('.geo-group').classList.add('error-border');
+          alert(`❌ Please fill all mandatory fields for LOB: ${name}`);
+          return;
+        }
+
+        savedLobs.push({name,slug:s,channels,billing,geo});
+      });
+
+      if(hasError) return;
+      renderWorkloadCards();renderKpiCards();renderHoursCards();
+      alert('✅ Client data saved successfully!');
+    }
+
+    function buildCards(targetId,toggleFn){
+      const wrap=document.getElementById(targetId);wrap.innerHTML='';
+      if(savedLobs.length===0){wrap.innerHTML='<p>No LOBs saved yet.</p>';return;}
+      savedLobs.forEach((lob,idx)=>{
+        const [c1,c2]=colorPairs[idx%colorPairs.length];
+        const card=document.createElement('div');card.className='workload-card';
+        card.innerHTML=`<div class="workload-card-header" style="background:linear-gradient(90deg, ${c1}, ${c2});">
+            <div class="workload-card-title"><i class="fa-solid fa-briefcase"></i><span>${lob.name}</span></div>
+            <div style="display:flex;align-items:center;gap:12px;font-weight:600">
+              <label><input type="checkbox" onchange="${toggleFn}('${lob.slug}', this)"> Show metrics</label>
+              <label><input type="checkbox" onchange="toggleShowAll('${lob.slug}', this)"> Show all</label>
+            </div>
+          </div>
+          <div id="${targetId}-body-${lob.slug}" class="workload-body" style="display:none"></div>`;
+        wrap.appendChild(card);
+      });
+    }
+
+    function renderWorkloadCards(){buildCards('workloadCards','toggleWorkload');}
+    function renderKpiCards(){buildCards('kpiCards','toggleKpi');}
+    function renderHoursCards(){buildCards('hoursCards','toggleHours');}
+
+    function toggleWorkload(slugId,checkbox){buildTable(slugId,checkbox,'workloadCards-body','Metrics',['Annual Volume','Annual AHT','Monthly','Weekly','Handle Time/Processing Time']);}
+    function toggleKpi(slugId,checkbox){buildTable(slugId,checkbox,'kpiCards-body','KPI Metrics',['Service Level','ASA','Abandon%','Concurrency','TAT','Processing Time','Cross Skilling']);}
+    function toggleHours(slugId,checkbox){buildTable(slugId,checkbox,'hoursCards-body','Hours Metrics',['Monday to Friday','Saturday','Sunday'],true);}
+
+    function buildTable(slugId,checkbox,prefix,title,metrics,isHours=false){
+      const target=document.getElementById(`${prefix}-${slugId}`);if(!checkbox.checked){target.style.display='none';return;}
+      const lob=savedLobs.find(l=>l.slug===slugId);if(!lob)return;
+      if(!lob.channels||lob.channels.length===0){target.innerHTML='<p>No channels saved for this LOB.</p>';target.style.display='block';return;}
+      let html=`<table id="table-${slugId}"><thead><tr><th>${title}</th>`;lob.channels.forEach(ch=>html+=`<th>${ch}</th>`);html+='</tr></thead><tbody>';
+      metrics.forEach(metric=>{
+        html+=`<tr><td><label><input type="checkbox" checked onchange="toggleMetricRow(this)"> ${metric}</label></td>`;
+        lob.channels.forEach(()=>{
+          if(isHours){
+            html+=`<td><label>Start:</label> <input type="time"> <label>End:</label> <input type="time"></td>`;
+          }
+          else if(metric==='Monthly'||metric==='Weekly'){
+            html+=`<td>
+              <button class="btn" onclick="downloadFile('${metric}')"><i class="fa fa-download"></i> Download</button>
+              <button class="btn" onclick="uploadFile(this,'${metric}')"><i class="fa fa-upload"></i> Upload</button>
+              <span class="uploaded-file"></span>
+            </td>`;
+          }
+          else if(metric==='Cross Skilling'){
+            html+=`<td><input type="checkbox"></td>`;
+          }
+          else{
+            html+='<td><input type="number" value="0"></td>';
+          }
+        });html+='</tr>';
+      });
+      html+='</tbody></table>';target.innerHTML=html;target.style.display='block';
+    }
+
+    function toggleMetricRow(checkbox){checkbox.closest("tr").style.display=checkbox.checked?"":"none";}
+
+    // ✅ Show all logic
+    function toggleShowAll(slugId, el){
+      const table=document.querySelector(`#table-${slugId}`);
+      if(!table) return;
+      table.querySelectorAll("tbody tr").forEach(row=>{
+        row.style.display= el.checked ? "" : (row.querySelector("input[type=checkbox]").checked?"":"none");
+      });
+    }
+
+    // ✅ Excel Download
+    function downloadFile(metric){
+      const data = [["Channel","Value"],["Example","0"]];
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, metric+"_template.xlsx");
+    }
+
+    // ✅ Upload with filename display
+    function uploadFile(btn, metric){
+      window.uploadTarget = btn.parentElement.querySelector(".uploaded-file");
+      window.uploadContext = metric;
+      document.getElementById("fileInput").click();
+    }
+    function handleFileUpload(event){
+      const file=event.target.files[0];
+      if(file && window.uploadTarget){
+        window.uploadTarget.textContent = "✔ " + file.name + " uploaded";
+      }
+      event.target.value="";
+    }
+  </script>
+
+  <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)">
+</body>
+</html>
